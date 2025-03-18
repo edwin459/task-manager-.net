@@ -7,20 +7,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TaskDbContext>(options =>
     options.UseInMemoryDatabase("TaskDb"));
 
-// Habilitar CORS y permitir todos los métodos (GET, POST, PUT, DELETE)
+// Configuración de CORS para permitir solicitudes desde Angular
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyMethod() // ✅ Asegura que PUT y DELETE sean permitidos
-                        .AllowAnyHeader());
+    options.AddPolicy("AllowAngular",
+        policy => policy.WithOrigins("http://localhost:4200")
+                        .AllowAnyMethod() // Permite PUT, POST, DELETE, GET
+                        .AllowAnyHeader()
+                        .AllowCredentials()); // Si es necesario permitir credenciales
 });
 
 builder.Services.AddControllers();
 var app = builder.Build();
 
-app.UseCors("AllowAll"); // Aplica la política de CORS
+app.UseCors("AllowAngular"); // Aplica la política de CORS antes de Authorization
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

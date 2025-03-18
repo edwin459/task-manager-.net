@@ -34,32 +34,31 @@ namespace TaskManagerAPI.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetTasks), new { id = task.Id }, task);
         }
-[HttpPut("tasks/{id}")]
-public IActionResult UpdateTask(int id, [FromBody] TaskItem updatedTask)
+
+        [HttpPut("{id}")]
+public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem updatedTask)
 {
-    // Verificar si el ID proporcionado coincide con el ID de la tarea en el cuerpo de la solicitud
-    if (id != updatedTask.Id)
+    if (updatedTask == null || id != updatedTask.Id)
     {
-        return BadRequest("El ID de la tarea no coincide con el ID proporcionado en la URL.");
+        return BadRequest(new { message = "ID no válido o datos incorrectos." });
     }
 
-    // Buscar la tarea existente en la base de datos
-    var existingTask = _context.Tasks.Find(id);
+    var existingTask = await _context.Tasks.FindAsync(id);
     if (existingTask == null)
     {
-        return NotFound("La tarea con el ID proporcionado no fue encontrada.");
+        return NotFound(new { message = "Tarea no encontrada." });
     }
 
-    // Actualizar las propiedades de la tarea existente con los valores de la tarea actualizada
+    // Forzar la asignación del ID correcto
+    updatedTask.Id = id;
+    
+    // Mapear los valores actualizados
     existingTask.Title = updatedTask.Title;
     existingTask.Description = updatedTask.Description;
     existingTask.IsCompleted = updatedTask.IsCompleted;
 
-    // Guardar los cambios en la base de datos
-    _context.SaveChanges();
-
-    // Retornar una respuesta sin contenido para indicar que la actualización fue exitosa
-    return NoContent();
+    await _context.SaveChangesAsync();
+    return Ok(existingTask);
 }
 
         [HttpDelete("{id}")]
